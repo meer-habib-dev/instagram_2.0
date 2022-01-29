@@ -6,7 +6,7 @@ import {
   PlusCircleIcon,
   UserGroupIcon,
   HeartIcon,
-  PaperAirplaceIcon,
+  PaperAirplaneIcon,
   MenuIcon,
   SearchIcon,
 } from "@heroicons/react/outline";
@@ -48,8 +48,9 @@ const Header = () => {
         </div>
         {/* right */}
         <div className="flex space-x-4 items-center justify-end">
-          <HomeIcon className="w-10 h-10" />
-          <MenuIcon className="w-10 h-10" />
+          <HomeIcon className="navBtn" />
+          <MenuIcon className=" navBtn md:hidden cursor-pointer" />
+           <PaperAirplaneIcon className='navBtn'/>
         </div>
       </div>
     </div>
