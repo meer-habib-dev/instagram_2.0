@@ -14,7 +14,7 @@ import { HomeIcon } from "@heroicons/react/solid";
 
 const Header = () => {
   return (
-    <div>
+    <div className="shadow-sm border-b bg-white sticky top-0 z-50">
       {/* left */}
       <div className="flex justify-between max-w-6xl mx-5 lg:mx-auto">
         <div className="relative w-24  hidden lg:inline-grid cursor-pointer">
@@ -50,7 +50,20 @@ const Header = () => {
         <div className="flex space-x-4 items-center justify-end">
           <HomeIcon className="navBtn" />
           <MenuIcon className=" navBtn md:hidden cursor-pointer" />
-           <PaperAirplaneIcon className='navBtn'/>
+          <div className="relative navItem">
+            <PaperAirplaneIcon className="navBtn rotate-45" />
+            <div className="absolute -top-1 -right-2 text-xs text-white bg-red-500 h-5 w-5 flex justify-center items-center rounded-full animate-pulse">
+              3
+            </div>
+          </div>
+          <PlusCircleIcon className="navBtn" />
+          <UserGroupIcon className="navBtn" />
+          <HeartIcon className="navBtn" />
+          <img
+            className="h-10 rounded-full cursor-pointer"
+            src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=870&q=80"
+            alt="profile pic"
+          />
         </div>
       </div>
     </div>
