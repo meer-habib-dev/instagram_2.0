@@ -1,3 +1,4 @@
+import { async } from "@firebase/util";
 import {
   BookmarkIcon,
   ChatIcon,
@@ -8,7 +9,45 @@ import {
 } from "@heroicons/react/outline";
 
 import { HeartIcon as HeartIconFilled } from "@heroicons/react/solid";
+import {
+  addDoc,
+  collection,
+  onSnapshot,
+  orderBy,
+  query,
+  serverTimestamp,
+} from "firebase/firestore";
+import { useSession } from "next-auth/react";
+import { useEffect, useState } from "react";
+import { db } from "../firebase";
 const Post = ({ id, caption, img, userimg, username }) => {
+  const { data: session } = useSession();
+  const [comments, setComments] = useState([]);
+  const [comment, setComment] = useState([]);
+
+  const sendComment = async (e) => {
+    e.preventDefault();
+
+    const commentToPost = comment;
+    setComment("");
+    await addDoc(collection(db, "posts", id, "comments"), {
+      comment: commentToPost,
+      username: session.user.username,
+      userImage: session.user.image,
+      timeStamp: serverTimestamp(),
+    });
+    useEffect(
+      () =>
+        onSnapshot(
+          query(
+            collection(db, "posts", id, "comments"),
+            orderBy("timeStamp", "desc")
+          ),
+          (snapshot) => setComments(snapshot.docs)
+        ),
+      [db]
+    );
+  };
   return (
     <div className="bg-white border rounded-sm my-7">
       {/* header */}
@@ -24,30 +63,51 @@ const Post = ({ id, caption, img, userimg, username }) => {
       {/* img */}
       <img src={img} className="w-full object-cover" alt="" />
       {/* buttons */}
-      <div className="flex justify-between pt-4 px-4">
-        <div className="flex space-x-4">
-          <HeartIcon className="btn" />
-          <ChatIcon className="btn" />
-          <PaperAirplaneIcon className="btn" />
+      {session && (
+        <div className="flex justify-between pt-4 px-4">
+          <div className="flex space-x-4">
+            <HeartIcon className="btn" />
+            <ChatIcon className="btn" />
+            <PaperAirplaneIcon className="btn" />
+          </div>
+          <BookmarkIcon className="btn" />
         </div>
-        <BookmarkIcon className="btn" />
-      </div>
+      )}
       {/* captions */}
       <p className="p-5 truncate">
         <span className="font-bold mr-1">{username} </span> {caption}
       </p>
       {/* comments */}
+      {comments.length > 0 && (
+        <div className="ml-10 h-20 overflow-y-scroll scrollbar-thumb-black scrollbar-thin">
+          {comments.map((com) => (
+            <div key={com.id} className="flex items-center space-x-2 mb-3">
+              <img src={com.data().image} alt="" className="h-7 rounded-full" />
+            </div>
+          ))}
+        </div>
+      )}
       {/* inputs */}
-
-      <form className="flex items-center p-4">
-        <EmojiHappyIcon className="h-7" />
-        <input
-          type="text"
-          placeholder="Add a comment..."
-          className="border-none outline-none focus:ring-0 flex-1"
-        />
-        <button className="font-semibold text-blue-400">Post</button>
-      </form>
+      {session && (
+        <form className="flex items-center p-4">
+          <EmojiHappyIcon className="h-7" />
+          <input
+            type="text"
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            placeholder="Add a comment..."
+            className="border-none outline-none focus:ring-0 flex-1"
+          />
+          <button
+            type="submit"
+            disabled={!comment}
+            onClick={sendComment}
+            className="font-semibold text-blue-400"
+          >
+            Post
+          </button>
+        </form>
+      )}
     </div>
   );
 };
