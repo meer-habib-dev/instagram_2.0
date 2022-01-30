@@ -53,6 +53,7 @@ const Header = () => {
            <PaperAirplaneIcon className='navBtn'/>
         </div>
       </div>
+      
     </div>
   );
 };
