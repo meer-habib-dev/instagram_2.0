@@ -13,10 +13,12 @@ import { HeartIcon as HeartIconFilled } from "@heroicons/react/solid";
 import {
   addDoc,
   collection,
+  doc,
   onSnapshot,
   orderBy,
   query,
   serverTimestamp,
+  setDoc,
 } from "firebase/firestore";
 import { useSession } from "next-auth/react";
 import { db } from "../firebase";
@@ -25,6 +27,27 @@ const Post = ({ id, caption, img, userimg, username }) => {
   const { data: session } = useSession();
   const [comments, setComments] = useState([]);
   const [comment, setComment] = useState([]);
+  const [likes, setLikes] = useState([]);
+  const [hasLiked, setHasLiked] = useState(false);
+
+  useEffect(
+    () =>
+      onSnapshot(collection(db, "posts", id, "likes"), (snapshot) =>
+        setLikes(snapshot.docs)
+      ),
+    [db, id]
+  );
+
+  useEffect(() => {
+    setHasLiked(
+      likes.findIndex((like) => like.id === session?.user?.uid) !== -1
+    );
+  }, [likes]);
+  const likePost = async () => {
+    await setDoc(doc(db, "posts", id, "likes", session.user.uid), {
+      username: session.user.username,
+    });
+  };
 
   const sendComment = async (e) => {
     e.preventDefault();
@@ -37,19 +60,19 @@ const Post = ({ id, caption, img, userimg, username }) => {
       userImage: session.user.image,
       timeStamp: serverTimestamp(),
     });
-};
-useEffect(
-  () =>
-    onSnapshot(
-      query(
-        collection(db, "posts", id, "comments"),
-        orderBy("timeStamp", "desc")
+  };
+  useEffect(
+    () =>
+      onSnapshot(
+        query(
+          collection(db, "posts", id, "comments"),
+          orderBy("timeStamp", "desc")
+        ),
+        (snapshot) => setComments(snapshot.docs)
       ),
-      (snapshot) => setComments(snapshot.docs)
-    ),
-  [db]
-);
-  console.log('user comment', comments)
+    [db, id]
+  );
+  console.log("user comment", comments);
   return (
     <div className="bg-white border rounded-sm my-7">
       {/* header */}
@@ -68,7 +91,7 @@ useEffect(
       {session && (
         <div className="flex justify-between pt-4 px-4">
           <div className="flex space-x-4">
-            <HeartIcon className="btn" />
+            <HeartIcon onClick={likePost} className="btn" />
             <ChatIcon className="btn" />
             <PaperAirplaneIcon className="btn" />
           </div>
@@ -84,9 +107,21 @@ useEffect(
         <div className="ml-10 h-20 overflow-y-scroll scrollbar-thumb-black scrollbar-thin">
           {comments.map((com) => (
             <div key={com.id} className="flex items-center space-x-2 mb-3 ">
-              <img src={com.data().userImage} alt="" className="h-7 rounded-full" />
-              <p className="text-sm flex-1">  <span className="font-bold"> {com.data().username}</span> {com.data().comment}</p>
-              <Moment className="text-xs pr-4" fromNow date={com?.data()?.timeStamp?.toDate()}></Moment> 
+              <img
+                src={com.data().userImage}
+                alt=""
+                className="h-7 rounded-full"
+              />
+              <p className="text-sm flex-1">
+                {" "}
+                <span className="font-bold"> {com.data().username}</span>{" "}
+                {com.data().comment}
+              </p>
+              <Moment
+                className="text-xs pr-4"
+                fromNow
+                date={com?.data()?.timeStamp?.toDate()}
+              ></Moment>
             </div>
           ))}
         </div>
@@ -112,9 +147,8 @@ useEffect(
           </button>
         </form>
       )}
-      </div>
+    </div>
   );
 };
 
 export default Post;
- 
