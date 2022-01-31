@@ -1,4 +1,5 @@
-import { async } from "@firebase/util";
+import { useEffect, useState } from "react";
+
 import {
   BookmarkIcon,
   ChatIcon,
@@ -18,8 +19,8 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import { useSession } from "next-auth/react";
-import { useEffect, useState } from "react";
 import { db } from "../firebase";
+import Moment from "react-moment";
 const Post = ({ id, caption, img, userimg, username }) => {
   const { data: session } = useSession();
   const [comments, setComments] = useState([]);
@@ -36,18 +37,19 @@ const Post = ({ id, caption, img, userimg, username }) => {
       userImage: session.user.image,
       timeStamp: serverTimestamp(),
     });
-    useEffect(
-      () =>
-        onSnapshot(
-          query(
-            collection(db, "posts", id, "comments"),
-            orderBy("timeStamp", "desc")
-          ),
-          (snapshot) => setComments(snapshot.docs)
-        ),
-      [db]
-    );
-  };
+};
+useEffect(
+  () =>
+    onSnapshot(
+      query(
+        collection(db, "posts", id, "comments"),
+        orderBy("timeStamp", "desc")
+      ),
+      (snapshot) => setComments(snapshot.docs)
+    ),
+  [db]
+);
+  console.log('user comment', comments)
   return (
     <div className="bg-white border rounded-sm my-7">
       {/* header */}
@@ -81,8 +83,10 @@ const Post = ({ id, caption, img, userimg, username }) => {
       {comments.length > 0 && (
         <div className="ml-10 h-20 overflow-y-scroll scrollbar-thumb-black scrollbar-thin">
           {comments.map((com) => (
-            <div key={com.id} className="flex items-center space-x-2 mb-3">
-              <img src={com.data().image} alt="" className="h-7 rounded-full" />
+            <div key={com.id} className="flex items-center space-x-2 mb-3 ">
+              <img src={com.data().userImage} alt="" className="h-7 rounded-full" />
+              <p className="text-sm flex-1">  <span className="font-bold"> {com.data().username}</span> {com.data().comment}</p>
+              <Moment className="text-xs pr-4" fromNow date={com?.data()?.timeStamp?.toDate()}></Moment> 
             </div>
           ))}
         </div>
@@ -108,8 +112,9 @@ const Post = ({ id, caption, img, userimg, username }) => {
           </button>
         </form>
       )}
-    </div>
+      </div>
   );
 };
 
 export default Post;
+ 
